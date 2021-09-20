@@ -21,19 +21,11 @@ use Symfony\Component\Semaphore\PersistingStoreInterface;
  * StoreFactory create stores and connections.
  *
  * @author Jérémy Derussé <jeremy@derusse.com>
- * @author Jérémy Derussé <jeremy@derusse.com>
  */
 class StoreFactory
 {
-    /**
-     * @param \Redis|\RedisArray|\RedisCluster|\Predis\ClientInterface|RedisProxy|RedisClusterProxy|string $connection Connection or DSN or Store short name
-     */
-    public static function createStore($connection): PersistingStoreInterface
+    public static function createStore(object|string $connection): PersistingStoreInterface
     {
-        if (!\is_string($connection) && !\is_object($connection)) {
-            throw new \TypeError(sprintf('Argument 1 passed to "%s()" must be a string or a connection object, "%s" given.', __METHOD__, \gettype($connection)));
-        }
-
         switch (true) {
             case $connection instanceof \Redis:
             case $connection instanceof \RedisArray:

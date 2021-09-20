@@ -19,22 +19,14 @@ use Symfony\Component\Uid\UuidV6;
 
 class UuidFactory
 {
-    private $defaultClass;
-    private $timeBasedClass;
-    private $nameBasedClass;
-    private $randomBasedClass;
-    private $timeBasedNode;
-    private $nameBasedNamespace;
+    private string $defaultClass;
+    private string $timeBasedClass;
+    private string $nameBasedClass;
+    private string $randomBasedClass;
+    private ?Uuid $timeBasedNode;
+    private ?Uuid $nameBasedNamespace;
 
-    /**
-     * @param string|int       $defaultClass
-     * @param string|int       $timeBasedClass
-     * @param string|int       $nameBasedClass
-     * @param string|int       $randomBasedClass
-     * @param Uuid|string|null $timeBasedNode
-     * @param Uuid|string|null $nameBasedNamespace
-     */
-    public function __construct($defaultClass = UuidV6::class, $timeBasedClass = UuidV6::class, $nameBasedClass = UuidV5::class, $randomBasedClass = UuidV4::class, $timeBasedNode = null, $nameBasedNamespace = null)
+    public function __construct(string|int $defaultClass = UuidV6::class, string|int $timeBasedClass = UuidV6::class, string|int $nameBasedClass = UuidV5::class, string|int $randomBasedClass = UuidV4::class, Uuid|string $timeBasedNode = null, Uuid|string $nameBasedNamespace = null)
     {
         if (null !== $timeBasedNode && !$timeBasedNode instanceof Uuid) {
             $timeBasedNode = Uuid::fromString($timeBasedNode);
@@ -55,7 +47,7 @@ class UuidFactory
     /**
      * @return UuidV6|UuidV4|UuidV1
      */
-    public function create(): Uuid
+    public function create(): UuidV6|UuidV4|UuidV1
     {
         $class = $this->defaultClass;
 
@@ -67,10 +59,7 @@ class UuidFactory
         return new RandomBasedUuidFactory($this->randomBasedClass);
     }
 
-    /**
-     * @param Uuid|string|null $node
-     */
-    public function timeBased($node = null): TimeBasedUuidFactory
+    public function timeBased(Uuid|string $node = null): TimeBasedUuidFactory
     {
         $node ?? $node = $this->timeBasedNode;
 
@@ -81,10 +70,7 @@ class UuidFactory
         return new TimeBasedUuidFactory($this->timeBasedClass, $node);
     }
 
-    /**
-     * @param Uuid|string|null $namespace
-     */
-    public function nameBased($namespace = null): NameBasedUuidFactory
+    public function nameBased(Uuid|string $namespace = null): NameBasedUuidFactory
     {
         $namespace ?? $namespace = $this->nameBasedNamespace;
 
@@ -95,10 +81,7 @@ class UuidFactory
         return new NameBasedUuidFactory($this->nameBasedClass, $this->getNamespace($namespace));
     }
 
-    /**
-     * @param Uuid|string $namespace
-     */
-    private function getNamespace($namespace): Uuid
+    private function getNamespace(Uuid|string $namespace): Uuid
     {
         if ($namespace instanceof Uuid) {
             return $namespace;

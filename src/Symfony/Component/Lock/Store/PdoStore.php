@@ -40,18 +40,18 @@ class PdoStore implements PersistingStoreInterface
 {
     use ExpiringStoreTrait;
 
-    private $conn;
-    private $dsn;
-    private $driver;
-    private $table = 'lock_keys';
-    private $idCol = 'key_id';
-    private $tokenCol = 'key_token';
-    private $expirationCol = 'key_expiration';
-    private $username = '';
-    private $password = '';
-    private $connectionOptions = [];
-    private $gcProbability;
-    private $initialTtl;
+    private \PDO|Connection $conn;
+    private string $dsn;
+    private string $driver;
+    private string $table = 'lock_keys';
+    private string $idCol = 'key_id';
+    private string $tokenCol = 'key_token';
+    private string $expirationCol = 'key_expiration';
+    private string $username = '';
+    private string $password = '';
+    private array $connectionOptions = [];
+    private float $gcProbability;
+    private int $initialTtl;
 
     /**
      * You can either pass an existing database connection as PDO instance or
@@ -67,16 +67,15 @@ class PdoStore implements PersistingStoreInterface
      *  * db_password: The password when lazy-connect [default: '']
      *  * db_connection_options: An array of driver-specific connection options [default: []]
      *
-     * @param \PDO|Connection|string $connOrDsn     A \PDO or Connection instance or DSN string or null
-     * @param array                  $options       An associative array of options
-     * @param float                  $gcProbability Probability expressed as floating number between 0 and 1 to clean old locks
-     * @param int                    $initialTtl    The expiration delay of locks in seconds
+     * @param array $options       An associative array of options
+     * @param float $gcProbability Probability expressed as floating number between 0 and 1 to clean old locks
+     * @param int   $initialTtl    The expiration delay of locks in seconds
      *
      * @throws InvalidArgumentException When first argument is not PDO nor Connection nor string
      * @throws InvalidArgumentException When PDO error mode is not PDO::ERRMODE_EXCEPTION
      * @throws InvalidArgumentException When the initial ttl is not valid
      */
-    public function __construct($connOrDsn, array $options = [], float $gcProbability = 0.01, int $initialTtl = 300)
+    public function __construct(\PDO|Connection|string $connOrDsn, array $options = [], float $gcProbability = 0.01, int $initialTtl = 300)
     {
         if ($gcProbability < 0 || $gcProbability > 1) {
             throw new InvalidArgumentException(sprintf('"%s" requires gcProbability between 0 and 1, "%f" given.', __METHOD__, $gcProbability));
@@ -93,10 +92,8 @@ class PdoStore implements PersistingStoreInterface
             $this->conn = $connOrDsn;
         } elseif ($connOrDsn instanceof Connection) {
             $this->conn = $connOrDsn;
-        } elseif (\is_string($connOrDsn)) {
-            $this->dsn = $connOrDsn;
         } else {
-            throw new InvalidArgumentException(sprintf('"%s" requires PDO or Doctrine\DBAL\Connection instance or DSN string as first argument, "%s" given.', __CLASS__, get_debug_type($connOrDsn)));
+            $this->dsn = $connOrDsn;
         }
 
         $this->table = $options['db_table'] ?? $this->table;
@@ -203,7 +200,7 @@ class PdoStore implements PersistingStoreInterface
     /**
      * {@inheritdoc}
      */
-    public function exists(Key $key)
+    public function exists(Key $key): bool
     {
         $sql = "SELECT 1 FROM $this->table WHERE $this->idCol = :id AND $this->tokenCol = :token AND $this->expirationCol > {$this->getCurrentTimestampStatement()}";
         $stmt = $this->getConnection()->prepare($sql);
@@ -233,12 +230,9 @@ class PdoStore implements PersistingStoreInterface
         return $key->getState(__CLASS__);
     }
 
-    /**
-     * @return \PDO|Connection
-     */
-    private function getConnection(): object
+    private function getConnection(): \PDO|Connection
     {
-        if (null === $this->conn) {
+        if (!isset($this->conn)) {
             if (strpos($this->dsn, '://')) {
                 if (!class_exists(DriverManager::class)) {
                     throw new InvalidArgumentException(sprintf('Failed to parse the DSN "%s". Try running "composer require doctrine/dbal".', $this->dsn));
@@ -342,7 +336,7 @@ class PdoStore implements PersistingStoreInterface
 
     private function getDriver(): string
     {
-        if (null !== $this->driver) {
+        if (isset($this->driver)) {
             return $this->driver;
         }
 

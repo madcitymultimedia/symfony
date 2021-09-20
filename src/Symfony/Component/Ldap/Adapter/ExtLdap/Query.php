@@ -12,6 +12,7 @@
 namespace Symfony\Component\Ldap\Adapter\ExtLdap;
 
 use Symfony\Component\Ldap\Adapter\AbstractQuery;
+use Symfony\Component\Ldap\Adapter\CollectionInterface;
 use Symfony\Component\Ldap\Exception\LdapException;
 use Symfony\Component\Ldap\Exception\NotBoundException;
 
@@ -25,20 +26,11 @@ class Query extends AbstractQuery
     public const PAGINATION_OID = '1.2.840.113556.1.4.319';
 
     /** @var resource[] */
-    private $results;
+    private array $results;
 
-    /** @var array */
-    private $serverctrls = [];
+    private array $serverctrls = [];
 
-    public function __construct(Connection $connection, string $dn, string $query, array $options = [])
-    {
-        parent::__construct($connection, $dn, $query, $options);
-    }
-
-    /**
-     * @return array
-     */
-    public function __sleep()
+    public function __sleep(): array
     {
         throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
     }
@@ -53,7 +45,7 @@ class Query extends AbstractQuery
         $con = $this->connection->getResource();
         $this->connection = null;
 
-        if (null === $this->results) {
+        if (!isset($this->results)) {
             return;
         }
 
@@ -65,15 +57,15 @@ class Query extends AbstractQuery
                 throw new LdapException('Could not free results: '.ldap_error($con));
             }
         }
-        $this->results = null;
+        unset($this->results);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function execute()
+    public function execute(): CollectionInterface
     {
-        if (null === $this->results) {
+        if (!isset($this->results)) {
             // If the connection is not bound, throw an exception. Users should use an explicit bind call first.
             if (!$this->connection->isBound()) {
                 throw new NotBoundException('Query execution is not possible without binding the connection first.');
@@ -110,7 +102,7 @@ class Query extends AbstractQuery
             $cookie = '';
             do {
                 if ($pageControl) {
-                    $this->controlPagedResult($con, $pageSize, true, $cookie);
+                    $this->controlPagedResult($pageSize, true, $cookie);
                 }
                 $sizeLimit = $itemsLeft;
                 if ($pageSize > 0 && $sizeLimit >= $pageSize) {
@@ -137,7 +129,7 @@ class Query extends AbstractQuery
                     break;
                 }
                 if ($pageControl) {
-                    $cookie = $this->controlPagedResultResponse($con, $search, $cookie);
+                    $cookie = $this->controlPagedResultResponse($con, $search);
                 }
             } while (null !== $cookie && '' !== $cookie);
 
@@ -180,7 +172,7 @@ class Query extends AbstractQuery
     private function resetPagination()
     {
         $con = $this->connection->getResource();
-        $this->controlPagedResult($con, 0, false, '');
+        $this->controlPagedResult(0, false, '');
         $this->serverctrls = [];
 
         // This is a workaround for a bit of a bug in the above invocation
@@ -207,14 +199,9 @@ class Query extends AbstractQuery
 
     /**
      * Sets LDAP pagination controls.
-     *
-     * @param resource $con
      */
-    private function controlPagedResult($con, int $pageSize, bool $critical, string $cookie): bool
+    private function controlPagedResult(int $pageSize, bool $critical, string $cookie): bool
     {
-        if (\PHP_VERSION_ID < 70300) {
-            return ldap_control_paged_result($con, $pageSize, $critical, $cookie);
-        }
         $this->serverctrls = [
             [
                 'oid' => \LDAP_CONTROL_PAGEDRESULTS,
@@ -235,13 +222,8 @@ class Query extends AbstractQuery
      * @param resource $con
      * @param resource $result
      */
-    private function controlPagedResultResponse($con, $result, string $cookie = ''): string
+    private function controlPagedResultResponse($con, $result): string
     {
-        if (\PHP_VERSION_ID < 70300) {
-            ldap_control_paged_result_response($con, $result, $cookie);
-
-            return $cookie;
-        }
         ldap_parse_result($con, $result, $errcode, $matcheddn, $errmsg, $referrals, $controls);
 
         return $controls[\LDAP_CONTROL_PAGEDRESULTS]['value']['cookie'] ?? '';
@@ -256,10 +238,6 @@ class Query extends AbstractQuery
      */
     private function callSearchFunction($con, callable $func, int $sizeLimit)
     {
-        if (\PHP_VERSION_ID < 70300) {
-            return @$func($con, $this->dn, $this->query, $this->options['filter'], $this->options['attrsOnly'], $sizeLimit, $this->options['timeout'], $this->options['deref']);
-        }
-
         return @$func($con, $this->dn, $this->query, $this->options['filter'], $this->options['attrsOnly'], $sizeLimit, $this->options['timeout'], $this->options['deref'], $this->serverctrls);
     }
 }

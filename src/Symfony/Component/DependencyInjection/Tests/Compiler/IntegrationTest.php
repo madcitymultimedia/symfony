@@ -327,9 +327,6 @@ class IntegrationTest extends TestCase
         $this->assertSame(['bar_tab_class_with_defaultmethod' => $container->get(BarTagClass::class), 'foo' => $container->get(FooTagClass::class)], $param);
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testTaggedServiceWithIndexAttributeAndDefaultMethodConfiguredViaAttribute()
     {
         $container = new ContainerBuilder();
@@ -380,9 +377,6 @@ class IntegrationTest extends TestCase
         $this->assertSame(['bar' => $container->get(BarTagClass::class), 'bar_duplicate' => $container->get(BarTagClass::class), 'foo_tag_class' => $container->get(FooTagClass::class)], $param);
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testTaggedLocatorConfiguredViaAttribute()
     {
         $container = new ContainerBuilder();
@@ -465,9 +459,6 @@ class IntegrationTest extends TestCase
         self::assertSame($container->get(FooTagClass::class), $locator->get('foo'));
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testFactoryWithAutoconfiguredArgument()
     {
         $container = new ContainerBuilder();
@@ -663,9 +654,6 @@ class IntegrationTest extends TestCase
         $this->assertSame($expected, ['baz' => $serviceLocator->get('baz')]);
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testTagsViaAttribute()
     {
         $container = new ContainerBuilder();
@@ -701,9 +689,6 @@ class IntegrationTest extends TestCase
         ], $collector->collectedTags);
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testAttributesAreIgnored()
     {
         $container = new ContainerBuilder();
@@ -769,8 +754,7 @@ class IntegrationTest extends TestCase
         );
         $container->registerAttributeForAutoconfiguration(
             CustomAnyAttribute::class,
-            eval(<<<'PHP'
-            return static function (\Symfony\Component\DependencyInjection\ChildDefinition $definition, \Symfony\Component\DependencyInjection\Tests\Fixtures\Attribute\CustomAnyAttribute $attribute, \ReflectionClass|\ReflectionMethod|\ReflectionProperty|\ReflectionParameter $reflector) {
+            static function (ChildDefinition $definition, CustomAnyAttribute $attribute, \ReflectionClass|\ReflectionMethod|\ReflectionProperty|\ReflectionParameter $reflector) {
                 $tagAttributes = get_object_vars($attribute);
                 if ($reflector instanceof \ReflectionClass) {
                     $tagAttributes['class'] = $reflector->getName();
@@ -783,9 +767,8 @@ class IntegrationTest extends TestCase
                 }
 
                 $definition->addTag('app.custom_tag', $tagAttributes);
-            };
-PHP
-            ));
+            }
+        );
 
         $container->register(TaggedService4::class)
             ->setPublic(true)
@@ -814,9 +797,6 @@ PHP
         ], $collector->collectedTags);
     }
 
-    /**
-     * @requires PHP 8
-     */
     public function testAutoconfigureViaAttribute()
     {
         $container = new ContainerBuilder();
@@ -871,10 +851,7 @@ class DecoratedServiceLocator implements ServiceProviderInterface
         $this->locator = $locator;
     }
 
-    /**
-     * @return mixed
-     */
-    public function get($id)
+    public function get($id): mixed
     {
         return $this->locator->get($id);
     }

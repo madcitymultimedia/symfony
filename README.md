@@ -17,13 +17,14 @@ Installation
 Sponsor
 -------
 
-Symfony 5.4 is [backed][27] by [Private Packagist][28].
+Symfony 6.0 is [backed][27] by [SensioLabs][28].
 
-Private Packagist is a fast, reliable, and secure Composer repository for your
-private packages. It mirrors all your open-source dependencies for better
-availability and monitors them for security vulnerabilities.
+As the creator of Symfony, SensioLabs supports companies using Symfony, with an
+offering encompassing consultancy, expertise, services, training, and technical
+assistance to ensure the success of web application development projects.
 
 Help Symfony by [sponsoring][29] its development!
+
 
 Documentation
 -------------
@@ -87,5 +88,5 @@ Symfony development is sponsored by [SensioLabs][21], led by the
 [25]: https://symfony.com/doc/current/contributing/code_of_conduct/care_team.html
 [26]: https://symfony.com/book
 [27]: https://symfony.com/backers
-[28]: https://packagist.com/
+[28]: https://sensiolabs.com/
 [29]: https://symfony.com/sponsor

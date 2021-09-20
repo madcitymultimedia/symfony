@@ -53,36 +53,6 @@ class AuthenticatedVoterTest extends TestCase
         ];
     }
 
-    /**
-     * @group legacy
-     * @dataProvider getLegacyVoteTests
-     */
-    public function testLegacyVote($authenticated, $attributes, $expected)
-    {
-        $this->testVote($authenticated, $attributes, $expected);
-    }
-
-    public function getLegacyVoteTests()
-    {
-        return [
-            ['anonymously', [], VoterInterface::ACCESS_ABSTAIN],
-            ['anonymously', ['FOO'], VoterInterface::ACCESS_ABSTAIN],
-            ['anonymously', ['IS_AUTHENTICATED_ANONYMOUSLY'], VoterInterface::ACCESS_GRANTED],
-            ['anonymously', ['IS_AUTHENTICATED_REMEMBERED'], VoterInterface::ACCESS_DENIED],
-            ['anonymously', ['IS_AUTHENTICATED_FULLY'], VoterInterface::ACCESS_DENIED],
-            ['anonymously', ['IS_ANONYMOUS'], VoterInterface::ACCESS_GRANTED],
-            ['anonymously', ['IS_IMPERSONATOR'], VoterInterface::ACCESS_DENIED],
-
-            ['fully', ['IS_ANONYMOUS'], VoterInterface::ACCESS_DENIED],
-            ['remembered', ['IS_ANONYMOUS'], VoterInterface::ACCESS_DENIED],
-            ['anonymously', ['IS_ANONYMOUS'], VoterInterface::ACCESS_GRANTED],
-
-            ['fully', ['IS_AUTHENTICATED_ANONYMOUSLY'], VoterInterface::ACCESS_GRANTED],
-            ['remembered', ['IS_AUTHENTICATED_ANONYMOUSLY'], VoterInterface::ACCESS_GRANTED],
-            ['anonymously', ['IS_AUTHENTICATED_ANONYMOUSLY'], VoterInterface::ACCESS_GRANTED],
-        ];
-    }
-
     protected function getToken($authenticated)
     {
         $user = new InMemoryUser('wouter', '', ['ROLE_USER']);
@@ -94,7 +64,6 @@ class AuthenticatedVoterTest extends TestCase
                 }
             };
             $token->setUser($user);
-            $token->setAuthenticated(true, false);
 
             return $token;
         }

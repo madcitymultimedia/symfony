@@ -21,13 +21,15 @@ use Symfony\Contracts\Service\ResetInterface;
 /**
  * @author Fabien Potencier <fabien@symfony.com>
  *
+ * @see TraceableEventDispatcher
+ *
  * @final
  */
 class EventDataCollector extends DataCollector implements LateDataCollectorInterface
 {
-    protected $dispatcher;
-    private $requestStack;
-    private $currentRequest;
+    private ?EventDispatcherInterface $dispatcher;
+    private ?RequestStack $requestStack;
+    private ?Request $currentRequest = null;
 
     public function __construct(EventDispatcherInterface $dispatcher = null, RequestStack $requestStack = null)
     {
@@ -69,8 +71,6 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
     }
 
     /**
-     * @param array $listeners An array of called listeners
-     *
      * @see TraceableEventDispatcher
      */
     public function setCalledListeners(array $listeners)

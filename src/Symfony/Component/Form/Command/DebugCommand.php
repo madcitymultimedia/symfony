@@ -34,12 +34,12 @@ class DebugCommand extends Command
     protected static $defaultName = 'debug:form';
     protected static $defaultDescription = 'Display form type information';
 
-    private $formRegistry;
-    private $namespaces;
-    private $types;
-    private $extensions;
-    private $guessers;
-    private $fileLinkFormatter;
+    private FormRegistryInterface $formRegistry;
+    private array $namespaces;
+    private array $types;
+    private array $extensions;
+    private array $guessers;
+    private ?FileLinkFormatter $fileLinkFormatter;
 
     public function __construct(FormRegistryInterface $formRegistry, array $namespaces = ['Symfony\Component\Form\Extension\Core\Type'], array $types = [], array $extensions = [], array $guessers = [], FileLinkFormatter $fileLinkFormatter = null)
     {
@@ -101,7 +101,7 @@ EOF
     /**
      * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

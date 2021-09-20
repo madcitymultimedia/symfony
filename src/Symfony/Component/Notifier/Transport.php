@@ -58,10 +58,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @final since Symfony 5.4
  */
-class Transport
+final class Transport
 {
     private const FACTORY_CLASSES = [
         AllMySmsTransportFactory::class,
@@ -100,7 +98,7 @@ class Transport
         ZulipTransportFactory::class,
     ];
 
-    private $factories;
+    private iterable $factories;
 
     public static function fromDsn(string $dsn, EventDispatcherInterface $dispatcher = null, HttpClientInterface $client = null): TransportInterface
     {
@@ -117,7 +115,7 @@ class Transport
     }
 
     /**
-     * @param TransportFactoryInterface[] $factories
+     * @param iterable<mixed, TransportFactoryInterface> $factories
      */
     public function __construct(iterable $factories)
     {

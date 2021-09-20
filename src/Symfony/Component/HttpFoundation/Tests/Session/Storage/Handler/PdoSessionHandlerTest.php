@@ -373,11 +373,7 @@ class MockPdo extends \PDO
         $this->errorMode = null !== $errorMode ?: \PDO::ERRMODE_EXCEPTION;
     }
 
-    /**
-     * @return mixed
-     */
-    #[\ReturnTypeWillChange]
-    public function getAttribute($attribute)
+    public function getAttribute($attribute): mixed
     {
         if (\PDO::ATTR_ERRMODE === $attribute) {
             return $this->errorMode;
@@ -390,11 +386,7 @@ class MockPdo extends \PDO
         return parent::getAttribute($attribute);
     }
 
-    /**
-     * @return false|\PDOStatement
-     */
-    #[\ReturnTypeWillChange]
-    public function prepare($statement, $driverOptions = [])
+    public function prepare($statement, $driverOptions = []): \PDOStatement|false
     {
         return \is_callable($this->prepareResult)
             ? ($this->prepareResult)($statement, $driverOptions)

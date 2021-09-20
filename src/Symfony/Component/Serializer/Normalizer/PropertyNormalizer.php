@@ -33,7 +33,7 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization($data, string $format = null)
+    public function supportsNormalization(mixed $data, string $format = null): bool
     {
         return parent::supportsNormalization($data, $format) && $this->supports(\get_class($data));
     }
@@ -41,7 +41,7 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    public function supportsDenormalization($data, string $type, string $format = null)
+    public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
         return parent::supportsDenormalization($data, $type, $format) && $this->supports($type);
     }
@@ -76,7 +76,7 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    protected function isAllowedAttribute($classOrObject, string $attribute, string $format = null, array $context = [])
+    protected function isAllowedAttribute(object|string $classOrObject, string $attribute, string $format = null, array $context = []): bool
     {
         if (!parent::isAllowedAttribute($classOrObject, $attribute, $format, $context)) {
             return false;
@@ -97,22 +97,19 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    protected function extractAttributes(object $object, string $format = null, array $context = [])
+    protected function extractAttributes(object $object, string $format = null, array $context = []): array
     {
         $reflectionObject = new \ReflectionObject($object);
         $attributes = [];
-        $checkPropertyInitialization = \PHP_VERSION_ID >= 70400;
 
         do {
             foreach ($reflectionObject->getProperties() as $property) {
-                if ($checkPropertyInitialization) {
-                    if (!$property->isPublic()) {
-                        $property->setAccessible(true);
-                    }
+                if (!$property->isPublic()) {
+                    $property->setAccessible(true);
+                }
 
-                    if (!$property->isInitialized($object)) {
-                        continue;
-                    }
+                if (!$property->isInitialized($object)) {
+                    continue;
                 }
 
                 if (!$this->isAllowedAttribute($reflectionObject->getName(), $property->name, $format, $context)) {
@@ -129,7 +126,7 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    protected function getAttributeValue(object $object, string $attribute, string $format = null, array $context = [])
+    protected function getAttributeValue(object $object, string $attribute, string $format = null, array $context = []): mixed
     {
         try {
             $reflectionProperty = $this->getReflectionProperty($object, $attribute);
@@ -148,7 +145,7 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     /**
      * {@inheritdoc}
      */
-    protected function setAttributeValue(object $object, string $attribute, $value, string $format = null, array $context = [])
+    protected function setAttributeValue(object $object, string $attribute, mixed $value, string $format = null, array $context = [])
     {
         try {
             $reflectionProperty = $this->getReflectionProperty($object, $attribute);
@@ -169,11 +166,9 @@ class PropertyNormalizer extends AbstractObjectNormalizer
     }
 
     /**
-     * @param string|object $classOrObject
-     *
      * @throws \ReflectionException
      */
-    private function getReflectionProperty($classOrObject, string $attribute): \ReflectionProperty
+    private function getReflectionProperty(string|object $classOrObject, string $attribute): \ReflectionProperty
     {
         $reflectionClass = new \ReflectionClass($classOrObject);
         while (true) {

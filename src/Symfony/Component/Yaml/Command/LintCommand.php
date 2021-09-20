@@ -35,18 +35,18 @@ class LintCommand extends Command
     protected static $defaultName = 'lint:yaml';
     protected static $defaultDescription = 'Lint a YAML file and outputs encountered errors';
 
-    private $parser;
-    private $format;
-    private $displayCorrectFiles;
-    private $directoryIteratorProvider;
-    private $isReadableProvider;
+    private Parser $parser;
+    private ?string $format = null;
+    private bool $displayCorrectFiles;
+    private ?\Closure $directoryIteratorProvider;
+    private ?\Closure $isReadableProvider;
 
     public function __construct(string $name = null, callable $directoryIteratorProvider = null, callable $isReadableProvider = null)
     {
         parent::__construct($name);
 
-        $this->directoryIteratorProvider = $directoryIteratorProvider;
-        $this->isReadableProvider = $isReadableProvider;
+        $this->directoryIteratorProvider = null === $directoryIteratorProvider || $directoryIteratorProvider instanceof \Closure ? $directoryIteratorProvider : \Closure::fromCallable($directoryIteratorProvider);
+        $this->isReadableProvider = null === $isReadableProvider || $isReadableProvider instanceof \Closure ? $isReadableProvider : \Closure::fromCallable($isReadableProvider);
     }
 
     /**
@@ -86,7 +86,7 @@ EOF
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $filenames = (array) $input->getArgument('filename');
@@ -242,11 +242,7 @@ EOF
 
     private function getParser(): Parser
     {
-        if (!$this->parser) {
-            $this->parser = new Parser();
-        }
-
-        return $this->parser;
+        return $this->parser ??= new Parser();
     }
 
     private function getDirectoryIterator(string $directory): iterable

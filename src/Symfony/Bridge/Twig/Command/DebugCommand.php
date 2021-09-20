@@ -35,12 +35,17 @@ class DebugCommand extends Command
     protected static $defaultName = 'debug:twig';
     protected static $defaultDescription = 'Show a list of twig functions, filters, globals and tests';
 
-    private $twig;
-    private $projectDir;
-    private $bundlesMetadata;
-    private $twigDefaultPath;
-    private $filesystemLoaders;
-    private $fileLinkFormatter;
+    private Environment $twig;
+    private ?string $projectDir;
+    private array $bundlesMetadata;
+    private ?string $twigDefaultPath;
+
+    /**
+     * @var FilesystemLoader[]
+     */
+    private array $filesystemLoaders;
+
+    private ?FileLinkFormatter $fileLinkFormatter;
 
     public function __construct(Environment $twig, string $projectDir = null, array $bundlesMetadata = [], string $twigDefaultPath = null, FileLinkFormatter $fileLinkFormatter = null)
     {
@@ -86,7 +91,7 @@ EOF
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('name');
@@ -293,7 +298,7 @@ EOF
         return $loaderPaths;
     }
 
-    private function getMetadata(string $type, $entity)
+    private function getMetadata(string $type, mixed $entity)
     {
         if ('globals' === $type) {
             return $entity;
@@ -351,7 +356,7 @@ EOF
         return null;
     }
 
-    private function getPrettyMetadata(string $type, $entity, bool $decorated): ?string
+    private function getPrettyMetadata(string $type, mixed $entity, bool $decorated): ?string
     {
         if ('tests' === $type) {
             return '';
@@ -557,7 +562,7 @@ EOF
      */
     private function getFilesystemLoaders(): array
     {
-        if (null !== $this->filesystemLoaders) {
+        if (isset($this->filesystemLoaders)) {
             return $this->filesystemLoaders;
         }
         $this->filesystemLoaders = [];

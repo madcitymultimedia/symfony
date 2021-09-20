@@ -136,7 +136,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization($data, string $format = null)
+    public function supportsNormalization(mixed $data, string $format = null): bool
     {
         return \is_object($data) && !$data instanceof \Traversable;
     }
@@ -144,7 +144,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * {@inheritdoc}
      */
-    public function normalize($object, string $format = null, array $context = [])
+    public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
         if (!isset($context['cache_key'])) {
             $context['cache_key'] = $this->getCacheKey($format, $context);
@@ -260,7 +260,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
         return array_merge($context, $metadata->getDenormalizationContextForGroups($this->getGroups($context)));
     }
 
-    private function getAttributeMetadata($objectOrClass, string $attribute): ?AttributeMetadataInterface
+    private function getAttributeMetadata(object|string $objectOrClass, string $attribute): ?AttributeMetadataInterface
     {
         if (!$this->classMetadataFactory) {
             return null;
@@ -272,7 +272,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * {@inheritdoc}
      */
-    protected function instantiateObject(array &$data, string $class, array &$context, \ReflectionClass $reflectionClass, $allowedAttributes, string $format = null)
+    protected function instantiateObject(array &$data, string $class, array &$context, \ReflectionClass $reflectionClass, array|bool $allowedAttributes, string $format = null): object
     {
         if ($this->classDiscriminatorResolver && $mapping = $this->classDiscriminatorResolver->getMappingForClass($class)) {
             if (!isset($data[$mapping->getTypeProperty()])) {
@@ -297,7 +297,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
      *
      * @return string[]
      */
-    protected function getAttributes(object $object, ?string $format, array $context)
+    protected function getAttributes(object $object, ?string $format, array $context): array
     {
         $class = $this->objectClassResolver ? ($this->objectClassResolver)($object) : \get_class($object);
         $key = $class.'-'.$context['cache_key'];
@@ -334,19 +334,17 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
      *
      * @return string[]
      */
-    abstract protected function extractAttributes(object $object, string $format = null, array $context = []);
+    abstract protected function extractAttributes(object $object, string $format = null, array $context = []): array;
 
     /**
      * Gets the attribute value.
-     *
-     * @return mixed
      */
-    abstract protected function getAttributeValue(object $object, string $attribute, string $format = null, array $context = []);
+    abstract protected function getAttributeValue(object $object, string $attribute, string $format = null, array $context = []): mixed;
 
     /**
      * {@inheritdoc}
      */
-    public function supportsDenormalization($data, string $type, string $format = null)
+    public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
         return class_exists($type) || (interface_exists($type, false) && $this->classDiscriminatorResolver && null !== $this->classDiscriminatorResolver->getMappingForClass($type));
     }
@@ -354,7 +352,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * {@inheritdoc}
      */
-    public function denormalize($data, string $type, string $format = null, array $context = [])
+    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): mixed
     {
         if (!isset($context['cache_key'])) {
             $context['cache_key'] = $this->getCacheKey($format, $context);
@@ -433,20 +431,17 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * Sets attribute value.
      */
-    abstract protected function setAttributeValue(object $object, string $attribute, $value, string $format = null, array $context = []);
+    abstract protected function setAttributeValue(object $object, string $attribute, mixed $value, string $format = null, array $context = []);
 
     /**
      * Validates the submitted data and denormalizes it.
      *
      * @param Type[] $types
-     * @param mixed  $data
-     *
-     * @return mixed
      *
      * @throws NotNormalizableValueException
      * @throws LogicException
      */
-    private function validateAndDenormalize(array $types, string $currentClass, string $attribute, $data, ?string $format, array $context)
+    private function validateAndDenormalize(array $types, string $currentClass, string $attribute, mixed $data, ?string $format, array $context): mixed
     {
         $expectedTypes = [];
         foreach ($types as $type) {
@@ -578,7 +573,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
     /**
      * @internal
      */
-    protected function denormalizeParameter(\ReflectionClass $class, \ReflectionParameter $parameter, string $parameterName, $parameterData, array $context, string $format = null)
+    protected function denormalizeParameter(\ReflectionClass $class, \ReflectionParameter $parameter, string $parameterName, mixed $parameterData, array $context, string $format = null): mixed
     {
         if ($parameter->isVariadic() || null === $this->propertyTypeExtractor || null === $types = $this->getTypes($class->getName(), $parameterName)) {
             return parent::denormalizeParameter($class, $parameter, $parameterName, $parameterData, $context, $format);
@@ -626,10 +621,8 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
 
     /**
      * Sets an attribute and apply the name converter if necessary.
-     *
-     * @param mixed $attributeValue
      */
-    private function updateData(array $data, string $attribute, $attributeValue, string $class, ?string $format, array $context): array
+    private function updateData(array $data, string $attribute, mixed $attributeValue, string $class, ?string $format, array $context): array
     {
         if (null === $attributeValue && ($context[self::SKIP_NULL_VALUES] ?? $this->defaultContext[self::SKIP_NULL_VALUES] ?? false)) {
             return $data;
@@ -697,10 +690,8 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
      * Builds the cache key for the attributes cache.
      *
      * The key must be different for every option in the context that could change which attributes should be handled.
-     *
-     * @return bool|string
      */
-    private function getCacheKey(?string $format, array $context)
+    private function getCacheKey(?string $format, array $context): bool|string
     {
         foreach ($context[self::EXCLUDE_FROM_CACHE_KEY] ?? $this->defaultContext[self::EXCLUDE_FROM_CACHE_KEY] as $key) {
             unset($context[$key]);

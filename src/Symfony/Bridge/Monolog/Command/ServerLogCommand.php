@@ -12,6 +12,7 @@
 namespace Symfony\Bridge\Monolog\Command;
 
 use Monolog\Formatter\FormatterInterface;
+use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
@@ -30,13 +31,13 @@ class ServerLogCommand extends Command
 {
     private const BG_COLOR = ['black', 'blue', 'cyan', 'green', 'magenta', 'red', 'white', 'yellow'];
 
-    private $el;
-    private $handler;
+    private ExpressionLanguage $el;
+    private HandlerInterface $handler;
 
     protected static $defaultName = 'server:log';
     protected static $defaultDescription = 'Start a log server that displays logs in real time';
 
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         if (!class_exists(ConsoleFormatter::class)) {
             return false;
@@ -76,7 +77,7 @@ EOF
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $filter = $input->getOption('filter');
         if ($filter) {

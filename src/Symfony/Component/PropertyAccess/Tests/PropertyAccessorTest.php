@@ -12,13 +12,11 @@
 namespace Symfony\Component\PropertyAccess\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\PropertyAccess\Exception\AccessException;
 use Symfony\Component\PropertyAccess\Exception\InvalidArgumentException;
 use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
 use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
-use Symfony\Component\PropertyAccess\Exception\UnexpectedTypeException;
 use Symfony\Component\PropertyAccess\Exception\UninitializedPropertyException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
@@ -39,8 +37,6 @@ use Symfony\Component\PropertyAccess\Tests\Fixtures\UninitializedProperty;
 
 class PropertyAccessorTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     /**
      * @var PropertyAccessor
      */
@@ -49,20 +45,6 @@ class PropertyAccessorTest extends TestCase
     protected function setUp(): void
     {
         $this->propertyAccessor = new PropertyAccessor();
-    }
-
-    public function getPathsWithUnexpectedType()
-    {
-        return [
-            ['', 'foobar'],
-            ['foo', 'foobar'],
-            [null, 'foobar'],
-            [123, 'foobar'],
-            [(object) ['prop' => null], 'prop.foobar'],
-            [(object) ['prop' => (object) ['subProp' => null]], 'prop.subProp.foobar'],
-            [['index' => null], '[index][foobar]'],
-            [['index' => ['subIndex' => null]], '[index][subIndex][foobar]'],
-        ];
     }
 
     public function getPathsWithMissingProperty()
@@ -124,19 +106,6 @@ class PropertyAccessorTest extends TestCase
     }
 
     /**
-     * @group legacy
-     * @dataProvider getPathsWithMissingProperty
-     */
-    public function testGetValueReturnsNullIfPropertyNotFoundAndExceptionIsDisabledUsingBooleanArgument($objectOrArray, $path)
-    {
-        $this->expectDeprecation('Since symfony/property-access 5.3: Passing a boolean as the fourth argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags as the second argument instead (i.e an integer).');
-
-        $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_GET | PropertyAccessor::MAGIC_SET, PropertyAccessor::DO_NOT_THROW, null, false);
-
-        $this->assertNull($this->propertyAccessor->getValue($objectOrArray, $path), $path);
-    }
-
-    /**
      * @dataProvider getPathsWithMissingIndex
      */
     public function testGetValueThrowsNoExceptionIfIndexNotFound($objectOrArray, $path)
@@ -154,22 +123,6 @@ class PropertyAccessorTest extends TestCase
         $this->propertyAccessor->getValue($objectOrArray, $path);
     }
 
-    /**
-     * @group legacy
-     * @dataProvider getPathsWithMissingIndex
-     */
-    public function testGetValueThrowsExceptionIfIndexNotFoundAndIndexExceptionsEnabledUsingBooleanArgument($objectOrArray, $path)
-    {
-        $this->expectException(NoSuchIndexException::class);
-        $this->expectDeprecation('Since symfony/property-access 5.3: Passing a boolean as the second argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags instead (i.e an integer).');
-
-        $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::DISALLOW_MAGIC_METHODS, true);
-        $this->propertyAccessor->getValue($objectOrArray, $path);
-    }
-
-    /**
-     * @requires PHP 7.4
-     */
     public function testGetValueThrowsExceptionIfUninitializedProperty()
     {
         $this->expectException(UninitializedPropertyException::class);
@@ -294,17 +247,6 @@ class PropertyAccessorTest extends TestCase
         $this->propertyAccessor->getValue(new TestClassMagicCall('Bernhard'), 'magicCallProperty');
     }
 
-    /**
-     * @group legacy
-     * @expectedDeprecation Since symfony/property-access 5.2: Passing a boolean as the first argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags instead (i.e an integer).
-     */
-    public function testLegacyGetValueReadsMagicCallIfEnabled()
-    {
-        $this->propertyAccessor = new PropertyAccessor(true);
-
-        $this->assertSame('Bernhard', $this->propertyAccessor->getValue(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
-    }
-
     public function testGetValueReadsMagicCallIfEnabled()
     {
         $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_GET | PropertyAccessor::MAGIC_SET | PropertyAccessor::MAGIC_CALL);
@@ -318,16 +260,6 @@ class PropertyAccessorTest extends TestCase
         $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_CALL);
 
         $this->assertSame('constant value', $this->propertyAccessor->getValue(new TestClassMagicCall('Bernhard'), 'constantMagicCallProperty'));
-    }
-
-    /**
-     * @dataProvider getPathsWithUnexpectedType
-     */
-    public function testGetValueThrowsExceptionIfNotObjectOrArray($objectOrArray, $path)
-    {
-        $this->expectException(UnexpectedTypeException::class);
-        $this->expectExceptionMessage('PropertyAccessor requires a graph of objects or arrays to operate on');
-        $this->propertyAccessor->getValue($objectOrArray, $path);
     }
 
     /**
@@ -413,21 +345,6 @@ class PropertyAccessorTest extends TestCase
         $this->propertyAccessor->setValue($author, 'magicCallProperty', 'Updated');
     }
 
-    /**
-     * @group legacy
-     * @expectedDeprecation Since symfony/property-access 5.2: Passing a boolean as the first argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags instead (i.e an integer).
-     */
-    public function testLegacySetValueUpdatesMagicCallIfEnabled()
-    {
-        $this->propertyAccessor = new PropertyAccessor(true);
-
-        $author = new TestClassMagicCall('Bernhard');
-
-        $this->propertyAccessor->setValue($author, 'magicCallProperty', 'Updated');
-
-        $this->assertEquals('Updated', $author->__call('getMagicCallProperty', []));
-    }
-
     public function testSetValueUpdatesMagicCallIfEnabled()
     {
         $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_CALL);
@@ -437,16 +354,6 @@ class PropertyAccessorTest extends TestCase
         $this->propertyAccessor->setValue($author, 'magicCallProperty', 'Updated');
 
         $this->assertEquals('Updated', $author->__call('getMagicCallProperty', []));
-    }
-
-    /**
-     * @dataProvider getPathsWithUnexpectedType
-     */
-    public function testSetValueThrowsExceptionIfNotObjectOrArray($objectOrArray, $path)
-    {
-        $this->expectException(UnexpectedTypeException::class);
-        $this->expectExceptionMessage('PropertyAccessor requires a graph of objects or arrays to operate on');
-        $this->propertyAccessor->setValue($objectOrArray, $path, 'value');
     }
 
     public function testGetValueWhenArrayValueIsNull()
@@ -501,30 +408,11 @@ class PropertyAccessorTest extends TestCase
         $this->assertFalse($this->propertyAccessor->isReadable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
     }
 
-    /**
-     * @group legacy
-     * @expectedDeprecation Since symfony/property-access 5.2: Passing a boolean as the first argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags instead (i.e an integer).
-     */
-    public function testLegacyIsReadableRecognizesMagicCallIfEnabled()
-    {
-        $this->propertyAccessor = new PropertyAccessor(true);
-
-        $this->assertTrue($this->propertyAccessor->isReadable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
-    }
-
     public function testIsReadableRecognizesMagicCallIfEnabled()
     {
         $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_CALL);
 
         $this->assertTrue($this->propertyAccessor->isReadable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
-    }
-
-    /**
-     * @dataProvider getPathsWithUnexpectedType
-     */
-    public function testIsReadableReturnsFalseIfNotObjectOrArray($objectOrArray, $path)
-    {
-        $this->assertFalse($this->propertyAccessor->isReadable($objectOrArray, $path));
     }
 
     /**
@@ -573,30 +461,11 @@ class PropertyAccessorTest extends TestCase
         $this->assertFalse($this->propertyAccessor->isWritable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
     }
 
-    /**
-     * @group legacy
-     * @expectedDeprecation Since symfony/property-access 5.2: Passing a boolean as the first argument to "Symfony\Component\PropertyAccess\PropertyAccessor::__construct()" is deprecated. Pass a combination of bitwise flags instead (i.e an integer).
-     */
-    public function testLegacyIsWritableRecognizesMagicCallIfEnabled()
-    {
-        $this->propertyAccessor = new PropertyAccessor(true);
-
-        $this->assertTrue($this->propertyAccessor->isWritable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
-    }
-
     public function testIsWritableRecognizesMagicCallIfEnabled()
     {
         $this->propertyAccessor = new PropertyAccessor(PropertyAccessor::MAGIC_CALL);
 
         $this->assertTrue($this->propertyAccessor->isWritable(new TestClassMagicCall('Bernhard'), 'magicCallProperty'));
-    }
-
-    /**
-     * @dataProvider getPathsWithUnexpectedType
-     */
-    public function testIsWritableReturnsFalseIfNotObjectOrArray($objectOrArray, $path)
-    {
-        $this->assertFalse($this->propertyAccessor->isWritable($objectOrArray, $path));
     }
 
     public function getValidPropertyPaths()

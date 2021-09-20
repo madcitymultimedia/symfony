@@ -20,7 +20,7 @@ use Symfony\Component\Finder\Comparator\DateComparator;
  */
 class DateRangeFilterIterator extends \FilterIterator
 {
-    private $comparators = [];
+    private array $comparators = [];
 
     /**
      * @param \Iterator        $iterator    The Iterator to filter
@@ -35,11 +35,8 @@ class DateRangeFilterIterator extends \FilterIterator
 
     /**
      * Filters the iterator values.
-     *
-     * @return bool
      */
-    #[\ReturnTypeWillChange]
-    public function accept()
+    public function accept(): bool
     {
         $fileinfo = $this->current();
 

@@ -42,10 +42,8 @@ final class AmpHttpClient implements HttpClientInterface, LoggerAwareInterface, 
     use HttpClientTrait;
     use LoggerAwareTrait;
 
-    private $defaultOptions = self::OPTIONS_DEFAULTS;
-
-    /** @var AmpClientState */
-    private $multi;
+    private array $defaultOptions = self::OPTIONS_DEFAULTS;
+    private AmpClientState $multi;
 
     /**
      * @param array    $defaultOptions     Default requests' options
@@ -145,12 +143,10 @@ final class AmpHttpClient implements HttpClientInterface, LoggerAwareInterface, 
     /**
      * {@inheritdoc}
      */
-    public function stream($responses, float $timeout = null): ResponseStreamInterface
+    public function stream(ResponseInterface|iterable $responses, float $timeout = null): ResponseStreamInterface
     {
         if ($responses instanceof AmpResponse) {
             $responses = [$responses];
-        } elseif (!is_iterable($responses)) {
-            throw new \TypeError(sprintf('"%s()" expects parameter 1 to be an iterable of AmpResponse objects, "%s" given.', __METHOD__, get_debug_type($responses)));
         }
 
         return new ResponseStream(AmpResponse::stream($responses, $timeout));

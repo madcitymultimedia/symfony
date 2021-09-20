@@ -29,16 +29,12 @@ class Connection extends AbstractConnection
     private const LDAP_TIMEOUT = 0x55;
     private const LDAP_ALREADY_EXISTS = 0x44;
 
-    /** @var bool */
-    private $bound = false;
+    private bool $bound = false;
 
     /** @var resource */
     private $connection;
 
-    /**
-     * @return array
-     */
-    public function __sleep()
+    public function __sleep(): array
     {
         throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
     }
@@ -56,7 +52,7 @@ class Connection extends AbstractConnection
     /**
      * {@inheritdoc}
      */
-    public function isBound()
+    public function isBound(): bool
     {
         return $this->bound;
     }
@@ -100,7 +96,7 @@ class Connection extends AbstractConnection
         return $this->connection;
     }
 
-    public function setOption(string $name, $value)
+    public function setOption(string $name, array|string|int|bool $value)
     {
         if (!@ldap_set_option($this->connection, ConnectionOptions::getOption($name), $value)) {
             throw new LdapException(sprintf('Could not set value "%s" for option "%s".', $value, $name));

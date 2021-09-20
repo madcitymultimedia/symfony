@@ -22,7 +22,7 @@ use Symfony\Component\DependencyInjection\Exception\RuntimeException;
  */
 class CheckArgumentsValidityPass extends AbstractRecursivePass
 {
-    private $throwExceptions;
+    private bool $throwExceptions;
 
     public function __construct(bool $throwExceptions = true)
     {
@@ -32,7 +32,7 @@ class CheckArgumentsValidityPass extends AbstractRecursivePass
     /**
      * {@inheritdoc}
      */
-    protected function processValue($value, bool $isRoot = false)
+    protected function processValue(mixed $value, bool $isRoot = false): mixed
     {
         if (!$value instanceof Definition) {
             return parent::processValue($value, $isRoot);

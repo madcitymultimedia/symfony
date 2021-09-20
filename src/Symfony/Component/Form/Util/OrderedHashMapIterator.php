@@ -20,40 +20,13 @@ namespace Symfony\Component\Form\Util;
  */
 class OrderedHashMapIterator implements \Iterator
 {
-    /**
-     * @var array
-     */
-    private $elements;
-
-    /**
-     * @var array
-     */
-    private $orderedKeys;
-
-    /**
-     * @var int
-     */
-    private $cursor;
-
-    /**
-     * @var int
-     */
-    private $cursorId;
-
-    /**
-     * @var array
-     */
-    private $managedCursors;
-
-    /**
-     * @var string|int|null
-     */
-    private $key;
-
-    /**
-     * @var mixed
-     */
-    private $current;
+    private array $elements;
+    private array $orderedKeys;
+    private int $cursor = 0;
+    private int $cursorId;
+    private array $managedCursors;
+    private string|int|null $key = null;
+    private mixed $current = null;
 
     /**
      * @param array $elements       The elements of the map, indexed by their
@@ -99,11 +72,8 @@ class OrderedHashMapIterator implements \Iterator
 
     /**
      * {@inheritdoc}
-     *
-     * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function current()
+    public function current(): mixed
     {
         return $this->current;
     }
@@ -126,11 +96,8 @@ class OrderedHashMapIterator implements \Iterator
 
     /**
      * {@inheritdoc}
-     *
-     * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function key()
+    public function key(): mixed
     {
         if (null === $this->key) {
             return null;

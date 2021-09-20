@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+6.0
+---
+
+ * The `security.authorization_checker` and `security.token_storage` services are now private
+ * Remove `UserPasswordEncoderCommand` class and the corresponding `user:encode-password` command,
+   use `UserPasswordHashCommand` and `user:hash-password` instead
+ * Remove the `security.encoder_factory.generic` service, the `security.encoder_factory` and `Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface` aliases,
+   use `security.password_hasher_factory` and `Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface` instead
+ * Remove the `security.user_password_encoder.generic` service, the `security.password_encoder` and the `Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface` aliases,
+   use `security.user_password_hasher`, `security.password_hasher` and `Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface` instead
+ * Remove the `logout.success_handler` and `logout.handlers` config options, register a listener on the `LogoutEvent` event instead
+
 5.4
 ---
 
@@ -15,6 +27,7 @@ CHANGELOG
    factories instead.
  * Deprecate the `always_authenticate_before_granting` option
  * Display the roles of the logged-in user in the Web Debug Toolbar
+
 
 5.3
 ---

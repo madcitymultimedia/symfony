@@ -153,10 +153,7 @@ class SymfonyRuntime extends GenericRuntime
         return parent::getRunner($application);
     }
 
-    /**
-     * @return mixed
-     */
-    protected function getArgument(\ReflectionParameter $parameter, ?string $type)
+    protected function getArgument(\ReflectionParameter $parameter, ?string $type): mixed
     {
         switch ($type) {
             case Request::class:

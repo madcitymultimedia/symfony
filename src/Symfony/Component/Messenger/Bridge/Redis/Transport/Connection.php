@@ -32,11 +32,10 @@ class Connection
         'group' => 'symfony',
         'consumer' => 'consumer',
         'auto_setup' => true,
-        'delete_after_ack' => false,
+        'delete_after_ack' => true,
         'delete_after_reject' => true,
         'stream_max_entries' => 0, // any value higher than 0 defines an approximate maximum number of stream entries
         'dbindex' => 0,
-        'tls' => false,
         'redeliver_timeout' => 3600, // Timeout before redeliver messages still in pending state (seconds)
         'claim_interval' => 60000, // Interval by which pending/abandoned messages should be checked
         'lazy' => false,
@@ -58,10 +57,7 @@ class Connection
     private $deleteAfterReject;
     private $couldHavePendingMessages = true;
 
-    /**
-     * @param \Redis|\RedisCluster|null $redis
-     */
-    public function __construct(array $configuration, array $connectionCredentials = [], array $redisOptions = [], $redis = null)
+    public function __construct(array $configuration, array $connectionCredentials = [], array $redisOptions = [], \Redis|\RedisCluster $redis = null)
     {
         if (version_compare(phpversion('redis'), '4.3.0', '<')) {
             throw new LogicException('The redis transport requires php-redis 4.3.0 or higher.');
@@ -138,10 +134,7 @@ class Connection
         return $redis;
     }
 
-    /**
-     * @param \Redis|\RedisCluster|null $redis
-     */
-    public static function fromDsn(string $dsn, array $redisOptions = [], $redis = null): self
+    public static function fromDsn(string $dsn, array $redisOptions = [], \Redis|\RedisCluster $redis = null): self
     {
         if (false === strpos($dsn, ',')) {
             $parsedUrl = self::parseDsn($dsn, $redisOptions);
@@ -182,8 +175,6 @@ class Connection
         if (\array_key_exists('delete_after_ack', $redisOptions)) {
             $deleteAfterAck = filter_var($redisOptions['delete_after_ack'], \FILTER_VALIDATE_BOOLEAN);
             unset($redisOptions['delete_after_ack']);
-        } else {
-            trigger_deprecation('symfony/redis-messenger', '5.4', 'Not setting the "delete_after_ack" boolean option explicitly is deprecated, its default value will change to true in 6.0.');
         }
 
         $deleteAfterReject = null;
@@ -199,11 +190,6 @@ class Connection
         }
 
         $tls = 'rediss' === $parsedUrl['scheme'];
-        if (\array_key_exists('tls', $redisOptions)) {
-            trigger_deprecation('symfony/redis-messenger', '5.3', 'Providing "tls" parameter is deprecated, use "rediss://" DSN scheme instead');
-            $tls = filter_var($redisOptions['tls'], \FILTER_VALIDATE_BOOLEAN);
-            unset($redisOptions['tls']);
-        }
 
         $redeliverTimeout = null;
         if (\array_key_exists('redeliver_timeout', $redisOptions)) {
@@ -281,7 +267,7 @@ class Connection
         $availableOptions = array_keys(self::DEFAULT_OPTIONS);
 
         if (0 < \count($invalidOptions = array_diff(array_keys($options), $availableOptions))) {
-            trigger_deprecation('symfony/messenger', '5.1', 'Invalid option(s) "%s" passed to the Redis Messenger transport. Passing invalid options is deprecated.', implode('", "', $invalidOptions));
+            throw new LogicException(sprintf('Invalid option(s) "%s" passed to the Redis Messenger transport.', implode('", "', $invalidOptions)));
         }
     }
 

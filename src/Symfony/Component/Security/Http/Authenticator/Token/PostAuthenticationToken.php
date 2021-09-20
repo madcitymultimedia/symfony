@@ -34,7 +34,7 @@ class PostAuthenticationToken extends AbstractToken
         $this->setUser($user);
         $this->firewallName = $firewallName;
 
-        // @deprecated since Symfony 5.4
+        // required for compatibility with Symfony 5.4
         if (method_exists($this, 'setAuthenticated')) {
             // this token is meant to be used after authentication success, so it is always authenticated
             $this->setAuthenticated(true, false);
@@ -47,7 +47,7 @@ class PostAuthenticationToken extends AbstractToken
      *
      * {@inheritdoc}
      */
-    public function getCredentials()
+    public function getCredentials(): mixed
     {
         return [];
     }

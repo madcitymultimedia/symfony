@@ -7,8 +7,6 @@
         {% if collector.token %}
             {% set is_authenticated = collector.enabled and collector.authenticated  %}
             {% set color_code = not is_authenticated ? 'yellow' %}
-        {% elseif collector.enabled %}
-            {% set color_code = collector.authenticatorManagerEnabled ? 'yellow' : 'red' %}
         {% else %}
             {% set color_code = '' %}
         {% endif %}
@@ -110,7 +108,7 @@
         {% if collector.token %}
             <div class="metrics">
                 <div class="metric">
-                    <span class="value">{{ collector.user == 'anon.' ? 'Anonymous' : collector.user }}</span>
+                    <span class="value">{{ collector.user }}</span>
                     <span class="label">Username</span>
                 </div>
 
@@ -177,12 +175,6 @@
                     <span class="value">{{ include('@WebProfiler/Icon/' ~ (collector.firewall.stateless ? 'yes' : 'no') ~ '.svg') }}</span>
                     <span class="label">Stateless</span>
                 </div>
-                {% if collector.authenticatorManagerEnabled == false %}
-                <div class="metric">
-                    <span class="value">{{ include('@WebProfiler/Icon/' ~ (collector.firewall.allows_anonymous ? 'yes' : 'no') ~ '.svg') }}</span>
-                    <span class="label">Allows anonymous</span>
-                </div>
-                {% endif %}
             </div>
 
             {% if collector.firewall.security_enabled %}

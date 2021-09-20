@@ -24,12 +24,12 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
  */
 class FormValidator extends ConstraintValidator
 {
-    private $resolvedGroups;
+    private \SplObjectStorage $resolvedGroups;
 
     /**
      * {@inheritdoc}
      */
-    public function validate($form, Constraint $formConstraint)
+    public function validate(mixed $form, Constraint $formConstraint)
     {
         if (!$formConstraint instanceof Form) {
             throw new UnexpectedTypeException($formConstraint, Form::class);
@@ -205,7 +205,7 @@ class FormValidator extends ConstraintValidator
      *
      * @return string|GroupSequence|array<string|GroupSequence>
      */
-    private function getValidationGroups(FormInterface $form)
+    private function getValidationGroups(FormInterface $form): string|GroupSequence|array
     {
         // Determine the clicked button of the complete form tree
         $clickedButton = null;
@@ -246,7 +246,7 @@ class FormValidator extends ConstraintValidator
      *
      * @return GroupSequence|array<string|GroupSequence>
      */
-    private static function resolveValidationGroups($groups, FormInterface $form)
+    private static function resolveValidationGroups(string|GroupSequence|array|callable $groups, FormInterface $form): GroupSequence|array
     {
         if (!\is_string($groups) && \is_callable($groups)) {
             $groups = $groups($form);
@@ -259,7 +259,7 @@ class FormValidator extends ConstraintValidator
         return (array) $groups;
     }
 
-    private static function getConstraintsInGroups($constraints, $group)
+    private static function getConstraintsInGroups(array $constraints, string|array $group): array
     {
         $groups = (array) $group;
 

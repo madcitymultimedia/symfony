@@ -21,10 +21,10 @@ use Symfony\Component\VarDumper\Dumper\CliDumper;
  */
 final class Dumper
 {
-    private $output;
-    private $dumper;
-    private $cloner;
-    private $handler;
+    private OutputInterface $output;
+    private ?CliDumper $dumper;
+    private ?ClonerInterface $cloner;
+    private \Closure $handler;
 
     public function __construct(OutputInterface $output, CliDumper $dumper = null, ClonerInterface $cloner = null)
     {
@@ -57,7 +57,7 @@ final class Dumper
         }
     }
 
-    public function __invoke($var): string
+    public function __invoke(mixed $var): string
     {
         return ($this->handler)($var);
     }

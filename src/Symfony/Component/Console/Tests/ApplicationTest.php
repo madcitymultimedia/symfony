@@ -1899,9 +1899,6 @@ class CustomApplication extends Application
 
 class CustomDefaultCommandApplication extends Application
 {
-    /**
-     * Overwrites the constructor in order to set a different default command.
-     */
     public function __construct()
     {
         parent::__construct();

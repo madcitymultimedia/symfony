@@ -35,10 +35,8 @@ final class NativeHttpClient implements HttpClientInterface, LoggerAwareInterfac
     use HttpClientTrait;
     use LoggerAwareTrait;
 
-    private $defaultOptions = self::OPTIONS_DEFAULTS;
-
-    /** @var NativeClientState */
-    private $multi;
+    private array $defaultOptions = self::OPTIONS_DEFAULTS;
+    private NativeClientState $multi;
 
     /**
      * @param array $defaultOptions     Default request's options
@@ -187,11 +185,6 @@ final class NativeHttpClient implements HttpClientInterface, LoggerAwareInterfac
             $options['timeout'] = min($options['max_duration'], $options['timeout']);
         }
 
-        $bindto = $options['bindto'];
-        if (!$bindto && (70322 === \PHP_VERSION_ID || 70410 === \PHP_VERSION_ID)) {
-            $bindto = '0:0';
-        }
-
         $context = [
             'http' => [
                 'protocol_version' => min($options['http_version'] ?: '1.1', '1.1'),
@@ -220,7 +213,7 @@ final class NativeHttpClient implements HttpClientInterface, LoggerAwareInterfac
                 'disable_compression' => true,
             ], static function ($v) { return null !== $v; }),
             'socket' => [
-                'bindto' => $bindto,
+                'bindto' => $options['bindto'],
                 'tcp_nodelay' => true,
             ],
         ];
@@ -250,12 +243,10 @@ final class NativeHttpClient implements HttpClientInterface, LoggerAwareInterfac
     /**
      * {@inheritdoc}
      */
-    public function stream($responses, float $timeout = null): ResponseStreamInterface
+    public function stream(ResponseInterface|iterable $responses, float $timeout = null): ResponseStreamInterface
     {
         if ($responses instanceof NativeResponse) {
             $responses = [$responses];
-        } elseif (!is_iterable($responses)) {
-            throw new \TypeError(sprintf('"%s()" expects parameter 1 to be an iterable of NativeResponse objects, "%s" given.', __METHOD__, get_debug_type($responses)));
         }
 
         return new ResponseStream(NativeResponse::stream($responses, $timeout));
@@ -302,7 +293,7 @@ final class NativeHttpClient implements HttpClientInterface, LoggerAwareInterfac
     /**
      * Resolves the IP of the host using the local DNS cache if possible.
      */
-    private static function dnsResolve($host, NativeClientState $multi, array &$info, ?\Closure $onProgress): string
+    private static function dnsResolve(string $host, NativeClientState $multi, array &$info, ?\Closure $onProgress): string
     {
         if (null === $ip = $multi->dnsCache[$host] ?? null) {
             $info['debug'] .= "* Hostname was NOT found in DNS cache\n";

@@ -32,7 +32,7 @@ class EmailValidator extends ConstraintValidator
         Email::VALIDATION_MODE_HTML5 => self::PATTERN_HTML5,
     ];
 
-    private $defaultMode;
+    private string $defaultMode;
 
     public function __construct(string $defaultMode = Email::VALIDATION_MODE_LOOSE)
     {
@@ -46,7 +46,7 @@ class EmailValidator extends ConstraintValidator
     /**
      * {@inheritdoc}
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint)
     {
         if (!$constraint instanceof Email) {
             throw new UnexpectedTypeException($constraint, Email::class);
@@ -56,7 +56,7 @@ class EmailValidator extends ConstraintValidator
             return;
         }
 
-        if (!is_scalar($value) && !(\is_object($value) && method_exists($value, '__toString'))) {
+        if (!is_scalar($value) && !$value instanceof \Stringable) {
             throw new UnexpectedValueException($value, 'string');
         }
 

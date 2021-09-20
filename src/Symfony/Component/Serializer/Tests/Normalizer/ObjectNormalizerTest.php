@@ -121,9 +121,6 @@ class ObjectNormalizerTest extends TestCase
         );
     }
 
-    /**
-     * @requires PHP 7.4
-     */
     public function testNormalizeObjectWithUninitializedProperties()
     {
         $obj = new Php74Dummy();
@@ -133,9 +130,6 @@ class ObjectNormalizerTest extends TestCase
         );
     }
 
-    /**
-     * @requires PHP 7.4
-     */
     public function testNormalizeObjectWithUninitializedPrivateProperties()
     {
         $obj = new Php74DummyPrivate();

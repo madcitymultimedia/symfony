@@ -16,13 +16,13 @@ namespace Symfony\Component\VarDumper\Cloner;
  */
 class VarCloner extends AbstractCloner
 {
-    private static $gid;
-    private static $arrayCache = [];
+    private static string $gid;
+    private static array $arrayCache = [];
 
     /**
      * {@inheritdoc}
      */
-    protected function doClone($var)
+    protected function doClone(mixed $var): array
     {
         $len = 1;                       // Length of $queue
         $pos = 0;                       // Number of cloned items past the minimum depth
@@ -44,9 +44,7 @@ class VarCloner extends AbstractCloner
         $stub = null;                   // Stub capturing the main properties of an original item value
                                         // or null if the original value is used directly
 
-        if (!$gid = self::$gid) {
-            $gid = self::$gid = md5(random_bytes(6)); // Unique string used to detect the special $GLOBALS variable
-        }
+        $gid = self::$gid ??= md5(random_bytes(6)); // Unique string used to detect the special $GLOBALS variable
         $arrayStub = new Stub();
         $arrayStub->type = Stub::TYPE_ARRAY;
         $fromObjCast = false;
@@ -65,12 +63,7 @@ class VarCloner extends AbstractCloner
             foreach ($vals as $k => $v) {
                 // $v is the original value or a stub object in case of hard references
 
-                if (\PHP_VERSION_ID >= 70400) {
-                    $zvalIsRef = null !== \ReflectionReference::fromArrayElement($vals, $k);
-                } else {
-                    $refs[$k] = $cookie;
-                    $zvalIsRef = $vals[$k] === $cookie;
-                }
+                $zvalIsRef = null !== \ReflectionReference::fromArrayElement($vals, $k);
 
                 if ($zvalIsRef) {
                     $vals[$k] = &$stub;         // Break hard references to make $queue completely

@@ -29,20 +29,20 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
 {
     protected $maxIdLength = 255;
 
-    private $marshaller;
-    private $conn;
-    private $dsn;
-    private $driver;
-    private $serverVersion;
-    private $table = 'cache_items';
-    private $idCol = 'item_id';
-    private $dataCol = 'item_data';
-    private $lifetimeCol = 'item_lifetime';
-    private $timeCol = 'item_time';
-    private $username = '';
-    private $password = '';
-    private $connectionOptions = [];
-    private $namespace;
+    private MarshallerInterface $marshaller;
+    private \PDO|Connection $conn;
+    private string $dsn;
+    private string $driver;
+    private string $serverVersion;
+    private mixed $table = 'cache_items';
+    private mixed $idCol = 'item_id';
+    private mixed $dataCol = 'item_data';
+    private mixed $lifetimeCol = 'item_lifetime';
+    private mixed $timeCol = 'item_time';
+    private mixed $username = '';
+    private mixed $password = '';
+    private mixed $connectionOptions = [];
+    private string $namespace;
 
     /**
      * You can either pass an existing database connection as PDO instance or
@@ -62,13 +62,11 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
      *  * db_password: The password when lazy-connect [default: '']
      *  * db_connection_options: An array of driver-specific connection options [default: []]
      *
-     * @param \PDO|Connection|string $connOrDsn
-     *
      * @throws InvalidArgumentException When first argument is not PDO nor Connection nor string
      * @throws InvalidArgumentException When PDO error mode is not PDO::ERRMODE_EXCEPTION
      * @throws InvalidArgumentException When namespace contains invalid characters
      */
-    public function __construct($connOrDsn, string $namespace = '', int $defaultLifetime = 0, array $options = [], MarshallerInterface $marshaller = null)
+    public function __construct(\PDO|Connection|string $connOrDsn, string $namespace = '', int $defaultLifetime = 0, array $options = [], MarshallerInterface $marshaller = null)
     {
         if (isset($namespace[0]) && preg_match('#[^-+.A-Za-z0-9]#', $namespace, $match)) {
             throw new InvalidArgumentException(sprintf('Namespace contains "%s" but only characters in [-+.A-Za-z0-9] are allowed.', $match[0]));
@@ -185,7 +183,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    public function prune()
+    public function prune(): bool
     {
         $deleteSql = "DELETE FROM $this->table WHERE $this->lifetimeCol + $this->timeCol <= :time";
 
@@ -227,7 +225,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    protected function doFetch(array $ids)
+    protected function doFetch(array $ids): iterable
     {
         $connection = $this->getConnection();
         $useDbalConstants = $connection instanceof Connection;
@@ -274,7 +272,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    protected function doHave(string $id)
+    protected function doHave(string $id): bool
     {
         $connection = $this->getConnection();
         $useDbalConstants = $connection instanceof Connection;
@@ -292,7 +290,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    protected function doClear(string $namespace)
+    protected function doClear(string $namespace): bool
     {
         $conn = $this->getConnection();
 
@@ -322,7 +320,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    protected function doDelete(array $ids)
+    protected function doDelete(array $ids): bool
     {
         $sql = str_pad('', (\count($ids) << 1) - 1, '?,');
         $sql = "DELETE FROM $this->table WHERE $this->idCol IN ($sql)";
@@ -339,7 +337,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
     /**
      * {@inheritdoc}
      */
-    protected function doSave(array $values, int $lifetime)
+    protected function doSave(array $values, int $lifetime): array|bool
     {
         if (!$values = $this->marshaller->marshall($values, $failed)) {
             return $failed;
@@ -447,12 +445,9 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
         return $failed;
     }
 
-    /**
-     * @return \PDO|Connection
-     */
-    private function getConnection(): object
+    private function getConnection(): \PDO|Connection
     {
-        if (null === $this->conn) {
+        if (!isset($this->conn)) {
             if (strpos($this->dsn, '://')) {
                 if (!class_exists(DriverManager::class)) {
                     throw new InvalidArgumentException(sprintf('Failed to parse the DSN "%s". Try running "composer require doctrine/dbal".', $this->dsn));
@@ -463,7 +458,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
                 $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             }
         }
-        if (null === $this->driver) {
+        if (!isset($this->driver)) {
             if ($this->conn instanceof \PDO) {
                 $this->driver = $this->conn->getAttribute(\PDO::ATTR_DRIVER_NAME);
             } else {
@@ -514,7 +509,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
 
     private function getServerVersion(): string
     {
-        if (null === $this->serverVersion) {
+        if (!isset($this->serverVersion)) {
             $conn = $this->conn instanceof \PDO ? $this->conn : $this->conn->getWrappedConnection();
             if ($conn instanceof \PDO) {
                 $this->serverVersion = $conn->getAttribute(\PDO::ATTR_SERVER_VERSION);

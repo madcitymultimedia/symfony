@@ -12,8 +12,6 @@
 namespace Symfony\Bundle\FrameworkBundle\DependencyInjection;
 
 use Doctrine\Common\Annotations\Annotation;
-use Doctrine\Common\Annotations\PsrCachedReader;
-use Doctrine\Common\Cache\Cache;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FullStack;
 use Symfony\Component\Asset\Package;
@@ -59,10 +57,8 @@ class Configuration implements ConfigurationInterface
 
     /**
      * Generates the configuration tree builder.
-     *
-     * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('framework');
         $rootNode = $treeBuilder->getRootNode();
@@ -205,18 +201,8 @@ class Configuration implements ConfigurationInterface
                                 ->scalarNode('field_name')->defaultValue('_token')->end()
                             ->end()
                         ->end()
-                        // to be set to false in Symfony 6.0
-                        ->booleanNode('legacy_error_messages')
-                            ->defaultTrue()
-                            ->validate()
-                                ->ifTrue()
-                                ->then(function ($v) {
-                                    trigger_deprecation('symfony/framework-bundle', '5.2', 'Setting the "framework.form.legacy_error_messages" option to "true" is deprecated. It will have no effect as of Symfony 6.0.');
-
-                                    return $v;
-                                })
-                            ->end()
-                        ->end()
+                        // to be deprecated in Symfony 6.1
+                        ->booleanNode('legacy_error_messages')->end()
                     ->end()
                 ->end()
             ->end()
@@ -302,7 +288,6 @@ class Configuration implements ConfigurationInterface
                         ->booleanNode('collect')->defaultTrue()->end()
                         ->booleanNode('only_exceptions')->defaultFalse()->end()
                         ->booleanNode('only_main_requests')->defaultFalse()->end()
-                        ->booleanNode('only_master_requests')->setDeprecated('symfony/framework-bundle', '5.3', 'Option "%node%" at "%path%" is deprecated, use "only_main_requests" instead.')->defaultFalse()->end()
                         ->scalarNode('dsn')->defaultValue('file:%kernel.cache_dir%/profiler')->end()
                     ->end()
                 ->end()
@@ -598,7 +583,7 @@ class Configuration implements ConfigurationInterface
                             )
                             ->defaultTrue()
                         ->end()
-                        ->booleanNode('utf8')->defaultNull()->end()
+                        ->booleanNode('utf8')->defaultTrue()->end()
                     ->end()
                 ->end()
             ->end()
@@ -612,15 +597,8 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('session')
                     ->info('session configuration')
                     ->canBeEnabled()
-                    ->beforeNormalization()
-                        ->ifTrue(function ($v) {
-                            return \is_array($v) && isset($v['storage_id']) && isset($v['storage_factory_id']);
-                        })
-                        ->thenInvalid('You cannot use both "storage_id" and "storage_factory_id" at the same time under "framework.session"')
-                    ->end()
                     ->children()
-                        ->scalarNode('storage_id')->defaultValue('session.storage.native')->end()
-                        ->scalarNode('storage_factory_id')->defaultNull()->end()
+                        ->scalarNode('storage_factory_id')->defaultValue('session.storage.factory.native')->end()
                         ->scalarNode('handler_id')->defaultValue('session.handler.native_file')->end()
                         ->scalarNode('name')
                             ->validate()
@@ -950,16 +928,16 @@ class Configuration implements ConfigurationInterface
 
     private function addAnnotationsSection(ArrayNodeDefinition $rootNode, callable $willBeAvailable)
     {
-        $doctrineCache = $willBeAvailable('doctrine/cache', Cache::class, 'doctrine/annotation');
-        $psr6Cache = $willBeAvailable('symfony/cache', PsrCachedReader::class, 'doctrine/annotation');
-
         $rootNode
             ->children()
                 ->arrayNode('annotations')
                     ->info('annotation configuration')
                     ->{$willBeAvailable('doctrine/annotations', Annotation::class) ? 'canBeDisabled' : 'canBeEnabled'}()
                     ->children()
-                        ->scalarNode('cache')->defaultValue(($doctrineCache || $psr6Cache) ? 'php_array' : 'none')->end()
+                        ->enumNode('cache')
+                            ->values(['none', 'php_array', 'file'])
+                            ->defaultValue('php_array')
+                        ->end()
                         ->scalarNode('file_cache_dir')->defaultValue('%kernel.cache_dir%/annotations')->end()
                         ->booleanNode('debug')->defaultValue($this->debug)->end()
                     ->end()

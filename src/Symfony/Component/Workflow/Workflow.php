@@ -52,10 +52,10 @@ class Workflow implements WorkflowInterface
         WorkflowEvents::ANNOUNCE => self::DISABLE_ANNOUNCE_EVENT,
     ];
 
-    private $definition;
-    private $markingStore;
-    private $dispatcher;
-    private $name;
+    private Definition $definition;
+    private MarkingStoreInterface $markingStore;
+    private ?EventDispatcherInterface $dispatcher;
+    private string $name;
 
     /**
      * When `null` fire all events (the default behaviour).
@@ -65,7 +65,7 @@ class Workflow implements WorkflowInterface
      *
      * @var array|string[]|null
      */
-    private $eventsToDispatch = null;
+    private ?array $eventsToDispatch = null;
 
     public function __construct(Definition $definition, MarkingStoreInterface $markingStore = null, EventDispatcherInterface $dispatcher = null, string $name = 'unnamed', array $eventsToDispatch = null)
     {
@@ -79,7 +79,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function getMarking(object $subject, array $context = [])
+    public function getMarking(object $subject, array $context = []): Marking
     {
         $marking = $this->markingStore->getMarking($subject);
 
@@ -125,7 +125,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function can(object $subject, string $transitionName)
+    public function can(object $subject, string $transitionName): bool
     {
         $transitions = $this->definition->getTransitions();
         $marking = $this->getMarking($subject);
@@ -184,7 +184,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function apply(object $subject, string $transitionName, array $context = [])
+    public function apply(object $subject, string $transitionName, array $context = []): Marking
     {
         $marking = $this->getMarking($subject, $context);
 
@@ -252,7 +252,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function getEnabledTransitions(object $subject)
+    public function getEnabledTransitions(object $subject): array
     {
         $enabledTransitions = [];
         $marking = $this->getMarking($subject);
@@ -289,7 +289,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -297,7 +297,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function getDefinition()
+    public function getDefinition(): Definition
     {
         return $this->definition;
     }
@@ -305,7 +305,7 @@ class Workflow implements WorkflowInterface
     /**
      * {@inheritdoc}
      */
-    public function getMarkingStore()
+    public function getMarkingStore(): MarkingStoreInterface
     {
         return $this->markingStore;
     }

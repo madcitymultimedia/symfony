@@ -152,7 +152,7 @@ abstract class AbstractDoctrineExtension extends Extension
      *
      * @return array|false
      */
-    protected function getMappingDriverBundleConfigDefaults(array $bundleConfig, \ReflectionClass $bundle, ContainerBuilder $container)
+    protected function getMappingDriverBundleConfigDefaults(array $bundleConfig, \ReflectionClass $bundle, ContainerBuilder $container): array|false
     {
         $bundleDir = \dirname($bundle->getFileName());
 
@@ -258,10 +258,8 @@ abstract class AbstractDoctrineExtension extends Extension
 
     /**
      * Detects what metadata driver to use for the supplied directory.
-     *
-     * @return string|null
      */
-    protected function detectMetadataDriver(string $dir, ContainerBuilder $container)
+    protected function detectMetadataDriver(string $dir, ContainerBuilder $container): ?string
     {
         $configPath = $this->getMappingResourceConfigDirectory();
         $extension = $this->getMappingResourceExtension();
@@ -300,11 +298,9 @@ abstract class AbstractDoctrineExtension extends Extension
     /**
      * Loads a cache driver.
      *
-     * @return string
-     *
      * @throws \InvalidArgumentException
      */
-    protected function loadCacheDriver(string $cacheName, string $objectManagerName, array $cacheDriver, ContainerBuilder $container)
+    protected function loadCacheDriver(string $cacheName, string $objectManagerName, array $cacheDriver, ContainerBuilder $container): string
     {
         $cacheDriverServiceId = $this->getObjectManagerElementName($objectManagerName.'_'.$cacheName);
 
@@ -378,10 +374,8 @@ abstract class AbstractDoctrineExtension extends Extension
      * Returns a modified version of $managerConfigs.
      *
      * The manager called $autoMappedManager will map all bundles that are not mapped by other managers.
-     *
-     * @return array
      */
-    protected function fixManagersAutoMappings(array $managerConfigs, array $bundles)
+    protected function fixManagersAutoMappings(array $managerConfigs, array $bundles): array
     {
         if ($autoMappedManager = $this->validateAutoMapping($managerConfigs)) {
             foreach (array_keys($bundles) as $bundle) {
@@ -405,33 +399,25 @@ abstract class AbstractDoctrineExtension extends Extension
      * Prefixes the relative dependency injection container path with the object manager prefix.
      *
      * @example $name is 'entity_manager' then the result would be 'doctrine.orm.entity_manager'
-     *
-     * @return string
      */
-    abstract protected function getObjectManagerElementName(string $name);
+    abstract protected function getObjectManagerElementName(string $name): string;
 
     /**
      * Noun that describes the mapped objects such as Entity or Document.
      *
      * Will be used for autodetection of persistent objects directory.
-     *
-     * @return string
      */
-    abstract protected function getMappingObjectDefaultName();
+    abstract protected function getMappingObjectDefaultName(): string;
 
     /**
      * Relative path from the bundle root to the directory where mapping files reside.
-     *
-     * @return string
      */
-    abstract protected function getMappingResourceConfigDirectory();
+    abstract protected function getMappingResourceConfigDirectory(): string;
 
     /**
      * Extension used by the mapping files.
-     *
-     * @return string
      */
-    abstract protected function getMappingResourceExtension();
+    abstract protected function getMappingResourceExtension(): string;
 
     /**
      * The class name used by the various mapping drivers.

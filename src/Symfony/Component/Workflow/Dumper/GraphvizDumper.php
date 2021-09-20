@@ -44,7 +44,7 @@ class GraphvizDumper implements DumperInterface
      *  * node: The default options for nodes (places + transitions)
      *  * edge: The default options for edges
      */
-    public function dump(Definition $definition, Marking $marking = null, array $options = [])
+    public function dump(Definition $definition, Marking $marking = null, array $options = []): string
     {
         $places = $this->findPlaces($definition, $marking);
         $transitions = $this->findTransitions($definition);
@@ -245,7 +245,7 @@ class GraphvizDumper implements DumperInterface
     /**
      * @internal
      */
-    protected function escape($value): string
+    protected function escape(string|bool $value): string
     {
         return \is_bool($value) ? ($value ? '1' : '0') : addslashes($value);
     }

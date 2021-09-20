@@ -13,14 +13,12 @@ namespace Symfony\Bundle\SecurityBundle\DependencyInjection;
 
 use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\AbstractFactory;
 use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\AuthenticatorFactoryInterface;
-use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\SecurityFactoryInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManager;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
-use Symfony\Component\Security\Http\Event\LogoutEvent;
 use Symfony\Component\Security\Http\Session\SessionAuthenticationStrategy;
 
 /**
@@ -34,26 +32,18 @@ class MainConfiguration implements ConfigurationInterface
     private $userProviderFactories;
 
     /**
-     * @param (SecurityFactoryInterface|AuthenticatorFactoryInterface)[] $factories
+     * @param AuthenticatorFactoryInterface[] $factories
      */
     public function __construct(array $factories, array $userProviderFactories)
     {
-        if (\is_array(current($factories))) {
-            trigger_deprecation('symfony/security-bundle', '5.4', 'Passing an array of arrays as 1st argument to "%s" is deprecated, pass a sorted array of factories instead.', __METHOD__);
-
-            $factories = array_merge(...array_values($factories));
-        }
-
         $this->factories = $factories;
         $this->userProviderFactories = $userProviderFactories;
     }
 
     /**
      * Generates the configuration tree builder.
-     *
-     * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $tb = new TreeBuilder('security');
         $rootNode = $tb->getRootNode();
@@ -77,23 +67,6 @@ class MainConfiguration implements ConfigurationInterface
                     return $v;
                 })
             ->end()
-            ->beforeNormalization()
-                ->ifTrue(function ($v) {
-                    if ($v['encoders'] ?? false) {
-                        trigger_deprecation('symfony/security-bundle', '5.3', 'The child node "encoders" at path "security" is deprecated, use "password_hashers" instead.');
-
-                        return true;
-                    }
-
-                    return $v['password_hashers'] ?? false;
-                })
-                ->then(function ($v) {
-                    $v['password_hashers'] = array_merge($v['password_hashers'] ?? [], $v['encoders'] ?? []);
-                    $v['encoders'] = $v['password_hashers'];
-
-                    return $v;
-                })
-            ->end()
             ->children()
                 ->scalarNode('access_denied_url')->defaultNull()->example('/foo/error403')->end()
                 ->enumNode('session_fixation_strategy')
@@ -101,10 +74,6 @@ class MainConfiguration implements ConfigurationInterface
                     ->defaultValue(SessionAuthenticationStrategy::MIGRATE)
                 ->end()
                 ->booleanNode('hide_user_not_found')->defaultTrue()->end()
-                ->booleanNode('always_authenticate_before_granting')
-                    ->defaultFalse()
-                    ->setDeprecated('symfony/security-bundle', '5.4')
-                ->end()
                 ->booleanNode('erase_credentials')->defaultTrue()->end()
                 ->booleanNode('enable_authenticator_manager')->defaultFalse()->info('Enables the new Symfony Security system based on Authenticators, all used authenticators must support this before enabling this.')->end()
                 ->arrayNode('access_decision_manager')
@@ -125,7 +94,6 @@ class MainConfiguration implements ConfigurationInterface
             ->end()
         ;
 
-        $this->addEncodersSection($rootNode);
         $this->addPasswordHashersSection($rootNode);
         $this->addProvidersSection($rootNode);
         $this->addFirewallsSection($rootNode, $this->factories);
@@ -245,7 +213,6 @@ class MainConfiguration implements ConfigurationInterface
                     ->scalarNode('csrf_token_id')->defaultValue('logout')->end()
                     ->scalarNode('path')->defaultValue('/logout')->end()
                     ->scalarNode('target')->defaultValue('/')->end()
-                    ->scalarNode('success_handler')->setDeprecated('symfony/security-bundle', '5.1', sprintf('The "%%node%%" at path "%%path%%" is deprecated, register a listener on the "%s" event instead.', LogoutEvent::class))->end()
                     ->booleanNode('invalidate_session')->defaultTrue()->end()
                 ->end()
                 ->fixXmlConfig('delete_cookie')
@@ -265,12 +232,6 @@ class MainConfiguration implements ConfigurationInterface
                                 ->scalarNode('samesite')->defaultNull()->end()
                             ->end()
                         ->end()
-                    ->end()
-                ->end()
-                ->fixXmlConfig('handler')
-                ->children()
-                    ->arrayNode('handlers')
-                        ->prototype('scalar')->setDeprecated('symfony/security-bundle', '5.1', sprintf('The "%%node%%" at path "%%path%%" is deprecated, register a listener on the "%s" event instead.', LogoutEvent::class))->end()
                     ->end()
                 ->end()
             ->end()
@@ -400,58 +361,6 @@ class MainConfiguration implements ConfigurationInterface
             ->validate()
                 ->ifTrue(function ($v) { return 0 === \count($v); })
                 ->thenInvalid('You must set a provider definition for the provider.')
-            ->end()
-        ;
-    }
-
-    private function addEncodersSection(ArrayNodeDefinition $rootNode)
-    {
-        $rootNode
-            ->fixXmlConfig('encoder')
-            ->children()
-                ->arrayNode('encoders')
-                    ->example([
-                        'App\Entity\User1' => 'auto',
-                        'App\Entity\User2' => [
-                            'algorithm' => 'auto',
-                            'time_cost' => 8,
-                            'cost' => 13,
-                        ],
-                    ])
-                    ->requiresAtLeastOneElement()
-                    ->useAttributeAsKey('class')
-                    ->prototype('array')
-                        ->canBeUnset()
-                        ->performNoDeepMerging()
-                        ->beforeNormalization()->ifString()->then(function ($v) { return ['algorithm' => $v]; })->end()
-                        ->children()
-                            ->scalarNode('algorithm')
-                                ->cannotBeEmpty()
-                                ->validate()
-                                    ->ifTrue(function ($v) { return !\is_string($v); })
-                                    ->thenInvalid('You must provide a string value.')
-                                ->end()
-                            ->end()
-                            ->arrayNode('migrate_from')
-                                ->prototype('scalar')->end()
-                                ->beforeNormalization()->castToArray()->end()
-                            ->end()
-                            ->scalarNode('hash_algorithm')->info('Name of hashing algorithm for PBKDF2 (i.e. sha256, sha512, etc..) See hash_algos() for a list of supported algorithms.')->defaultValue('sha512')->end()
-                            ->scalarNode('key_length')->defaultValue(40)->end()
-                            ->booleanNode('ignore_case')->defaultFalse()->end()
-                            ->booleanNode('encode_as_base64')->defaultTrue()->end()
-                            ->scalarNode('iterations')->defaultValue(5000)->end()
-                            ->integerNode('cost')
-                                ->min(4)
-                                ->max(31)
-                                ->defaultNull()
-                            ->end()
-                            ->scalarNode('memory_cost')->defaultNull()->end()
-                            ->scalarNode('time_cost')->defaultNull()->end()
-                            ->scalarNode('id')->end()
-                        ->end()
-                    ->end()
-                ->end()
             ->end()
         ;
     }

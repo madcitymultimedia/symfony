@@ -721,7 +721,6 @@ class SerializerTest extends TestCase
         );
     }
 
-    /** @requires PHP 7.4 */
     public function testCollectDenormalizationErrors()
     {
         $json = '
@@ -898,7 +897,6 @@ class SerializerTest extends TestCase
         $this->assertSame($expected, $exceptionsAsArray);
     }
 
-    /** @requires PHP 7.4 */
     public function testCollectDenormalizationErrors2()
     {
         $json = '

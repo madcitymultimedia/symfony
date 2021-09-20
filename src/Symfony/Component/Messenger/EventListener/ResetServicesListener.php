@@ -40,7 +40,7 @@ class ResetServicesListener implements EventSubscriberInterface
         $this->servicesResetter->reset();
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             WorkerMessageHandledEvent::class => ['resetServices'],

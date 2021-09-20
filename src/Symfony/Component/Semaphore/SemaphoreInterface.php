@@ -25,8 +25,6 @@ interface SemaphoreInterface
     /**
      * Acquires the semaphore. If the semaphore has reached its limit.
      *
-     * @return bool
-     *
      * @throws SemaphoreAcquiringException If the semaphore can not be acquired
      */
     public function acquire(): bool;
